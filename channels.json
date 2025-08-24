@@ -1,12 +1,5 @@
 {
-  "Q": {
-    "A": "https://wo.cma.footballii.ir/hls2/b3.m3u8"
-  },
-  "📺 إرسال قناة للمستخدم": {
-    "A": "https://wo.cma.footballii.ir/hls2/b3.m3u8",
-    "📺 إرسال قناة للمستخدم": "📺 إرسال قناة للمستخدم"
-  },
-  "F": {
-    "A": "https://wo.cma.footballii.ir/hls2/b3.m3u8"
+  "A": {
+    "Test": "https://wo.cma.footballii.ir/hls2/b3.m3u8"
   }
 }
