@@ -1,70 +1,34 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini TV</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background-color: #111;
-    color: #fff;
-    text-align: center;
-    padding: 20px;
-}
-h1 {
-    margin-bottom: 20px;
-}
-#player {
-    margin-top: 20px;
-}
-video {
-    width: 100%;
-    max-width: 800px;
-    border-radius: 10px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>MiniApp TV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; background:#000; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
+    video { width:100%; max-width:720px; height:auto; background:#000; }
+    h2 { text-align:center; margin:10px 0; }
+  </style>
 </head>
 <body>
-<h1>مشاهدة القناة</h1>
-<div id="player"></div>
+  <h2 id="channelName">جاري التحميل...</h2>
+  <video id="videoPlayer" controls autoplay></video>
 
-<script>
-// قراءة اسم القناة من رابط WebApp
-const urlParams = new URLSearchParams(window.location.search);
-const channelName = urlParams.get('channel');
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name");
+    const url = params.get("url");
 
-// رابط JSON من GitHub Pages
-const jsonURL = "https://KURDMyths.github.io/Tv/channels.json";
+    const channelNameDisplay = document.getElementById("channelName");
+    const videoPlayer = document.getElementById("videoPlayer");
 
-async function loadChannel() {
-    const res = await fetch(jsonURL);
-    const data = await res.json();
-
-    let found = false;
-    for (let category in data) {
-        if (data[category][channelName]) {
-            found = true;
-            const videoUrl = data[category][channelName];
-
-            const container = document.getElementById("player");
-            const video = document.createElement("video");
-            video.src = videoUrl;
-            video.controls = true;
-            video.autoplay = true;
-            video.style.width = "100%";
-            video.style.borderRadius = "10px";
-            container.appendChild(video);
-            break;
-        }
+    if(name && url){
+      channelNameDisplay.textContent = name;
+      videoPlayer.src = url;
+      videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
+    } else {
+      channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
     }
-
-    if (!found) {
-        document.getElementById("player").innerHTML = "🚫 القناة غير موجودة.";
-    }
-}
-
-loadChannel();
-</script>
+  </script>
 </body>
 </html>
