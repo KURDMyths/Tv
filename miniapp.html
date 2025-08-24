@@ -13,6 +13,7 @@
     overflow: hidden;
     background: black;
   }
+
   body {
     display: flex;
     justify-content: center;
@@ -20,51 +21,53 @@
     font-family: Arial, sans-serif;
     color: white;
   }
-  #videoWrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
+
+  h2 {
+    position: absolute;
+    top: env(safe-area-inset-top, 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.5);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1.2em;
+    z-index: 10;
+    transition: opacity 0.3s;
+  }
+
+  h2.hidden { opacity: 0; }
+
+  #videoContainer {
+    position: relative;
     width: 100%;
     height: 100%;
-    background: black;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    background: black;
   }
+
   video {
-    width: 100%;
-    height: 100%;
-    /* لجعل الفيديو بالكامل مرئيا داخل الشاشة */
-    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* هذا يحافظ على الفيديو كاملًا داخل الشاشة */
+    background: black;
   }
-  #channelName {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    text-align: center;
-    padding: 10px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0));
-    transition: opacity 0.3s;
-    opacity: 1;
-    z-index: 200;
-  }
-  #videoControls {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+
+  .controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    justify-content: center;
-    padding: 10px;
-    background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
     gap: 10px;
     transition: opacity 0.3s;
     opacity: 0;
-    z-index: 200;
+    z-index: 20;
   }
+
   .controls.visible { opacity: 1; }
+
   .control-btn {
     background: rgba(0,0,0,0.6);
     border: none;
@@ -78,18 +81,17 @@
 </head>
 <body>
 
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<h2 id="channelName">جاري التحميل...</h2>
 
-<div id="videoWrapper">
+<div id="videoContainer">
   <video id="videoPlayer" playsinline webkit-playsinline></video>
+  <div id="videoControls" class="controls">
+    <button id="playPauseBtn" class="control-btn">▶️</button>
+    <button id="fullscreenBtn" class="control-btn">🖥️</button>
+  </div>
 </div>
 
-<div id="channelName">جاري التحميل...</div>
-
-<div id="videoControls" class="controls">
-  <button id="playPauseBtn" class="control-btn">▶️</button>
-</div>
-
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const name = params.get("name");
@@ -97,36 +99,36 @@ const url = params.get("url");
 
 const channelNameDisplay = document.getElementById("channelName");
 const videoPlayer = document.getElementById("videoPlayer");
+const videoContainer = document.getElementById("videoContainer");
 const videoControls = document.getElementById("videoControls");
 const playPauseBtn = document.getElementById("playPauseBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
 
 if(name && url){
   channelNameDisplay.textContent = name;
   videoPlayer.src = url;
-  videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
+  videoPlayer.play().catch(e=>console.log("خطأ في التشغيل:", e));
 } else {
   channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
 }
 
-// إظهار/إخفاء عناصر التحكم + الاسم تلقائياً
+// إظهار/إخفاء عناصر التحكم + الاسم تلقائيًا
 let hideTimeout;
 function showControls(){
   videoControls.classList.add('visible');
-  channelNameDisplay.style.opacity = '1';
+  channelNameDisplay.classList.remove('hidden');
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{
     videoControls.classList.remove('visible');
-    channelNameDisplay.style.opacity = '0';
+    channelNameDisplay.classList.add('hidden');
   }, 4000);
 }
 
-// عند الضغط على أي مكان في الشاشة
-document.addEventListener('click', ()=>{
-  showControls();
-});
+// عند الضغط على الفيديو
+videoContainer.addEventListener('click', ()=>{ showControls(); });
 
 // زر التشغيل
-playPauseBtn.addEventListener('click', e => {
+playPauseBtn.addEventListener('click', e=>{
   e.stopPropagation();
   if(videoPlayer.paused){
     videoPlayer.play();
@@ -137,35 +139,39 @@ playPauseBtn.addEventListener('click', e => {
   }
 });
 
-// استخدام دالة Telegram Web App لملء الشاشة
-function expandMiniApp() {
-  // التحقق من أن الواجهة متوفرة
-  if (window.Telegram && window.Telegram.WebApp) {
-    // إخفاء الأزرار تلقائيا وتكبير التطبيق ليملأ الشاشة
-    Telegram.WebApp.expand();
+// Fullscreen باستخدام Telegram MiniApp API
+function requestTelegramFullscreen(){
+  if(window.Telegram && Telegram.WebApp){
+    Telegram.WebApp.expand(); // يملأ الشاشة كاملًا
+  } else {
+    if(videoContainer.requestFullscreen){
+      videoContainer.requestFullscreen();
+    } else if(videoContainer.webkitRequestFullscreen){
+      videoContainer.webkitRequestFullscreen();
+    } else if(videoContainer.msRequestFullscreen){
+      videoContainer.msRequestFullscreen();
+    }
   }
 }
-
-// تشغيل وضع ملء الشاشة عند تشغيل الفيديو في الوضع الأفقي فقط
-videoPlayer.addEventListener('play', () => {
-  playPauseBtn.textContent = '⏸️';
-  // التحقق من أن الجهاز في الوضع الأفقي قبل توسيع التطبيق
-  if (window.screen.orientation.type.startsWith('landscape')) {
-    expandMiniApp();
-  }
+fullscreenBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  requestTelegramFullscreen();
 });
 
-videoPlayer.addEventListener('pause', () => playPauseBtn.textContent = '▶️');
+// تشغيل Fullscreen تلقائي عند البداية
+videoPlayer.addEventListener('play', ()=>{
+  playPauseBtn.textContent='⏸️';
+  requestTelegramFullscreen();
+});
+videoPlayer.addEventListener('pause', ()=>playPauseBtn.textContent='▶️');
 
-// إخفاء عناصر التحكم بعد البداية تلقائياً
+// إخفاء عناصر التحكم بعد البداية تلقائيًا
 showControls();
 
-// إضافة استماع لتغير اتجاه الشاشة
-window.screen.orientation.addEventListener('change', () => {
-  if (window.screen.orientation.type.startsWith('landscape')) {
-    expandMiniApp();
-  }
-});
+// جعل شريط تيليجرام العلوي شفاف
+if(window.Telegram && Telegram.WebApp){
+  Telegram.WebApp.setHeaderColor('transparent');
+}
 </script>
 
 </body>
