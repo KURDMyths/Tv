@@ -13,7 +13,6 @@
     overflow: hidden;
     background: black;
   }
-
   body {
     display: flex;
     justify-content: center;
@@ -21,7 +20,6 @@
     font-family: Arial, sans-serif;
     color: white;
   }
-
   h2 {
     position: absolute;
     top: env(safe-area-inset-top, 10px);
@@ -32,11 +30,7 @@
     border-radius: 8px;
     font-size: 1.2em;
     z-index: 10;
-    transition: opacity 0.3s;
   }
-
-  h2.hidden { opacity: 0; }
-
   #videoContainer {
     position: relative;
     width: 100%;
@@ -46,14 +40,12 @@
     align-items: center;
     background: black;
   }
-
   video {
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain; /* هذا يحافظ على الفيديو كاملًا داخل الشاشة */
+    object-fit: contain;
     background: black;
   }
-
   .controls {
     position: absolute;
     bottom: 10px;
@@ -61,13 +53,8 @@
     transform: translateX(-50%);
     display: flex;
     gap: 10px;
-    transition: opacity 0.3s;
-    opacity: 0;
     z-index: 20;
   }
-
-  .controls.visible { opacity: 1; }
-
   .control-btn {
     background: rgba(0,0,0,0.6);
     border: none;
@@ -104,6 +91,7 @@ const videoControls = document.getElementById("videoControls");
 const playPauseBtn = document.getElementById("playPauseBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 
+// تعيين الفيديو
 if(name && url){
   channelNameDisplay.textContent = name;
   videoPlayer.src = url;
@@ -112,61 +100,42 @@ if(name && url){
   channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
 }
 
-// إظهار/إخفاء عناصر التحكم + الاسم تلقائيًا
-let hideTimeout;
-function showControls(){
-  videoControls.classList.add('visible');
-  channelNameDisplay.classList.remove('hidden');
-  clearTimeout(hideTimeout);
-  hideTimeout = setTimeout(()=>{
-    videoControls.classList.remove('visible');
-    channelNameDisplay.classList.add('hidden');
-  }, 4000);
-}
-
-// عند الضغط على الفيديو
-videoContainer.addEventListener('click', ()=>{ showControls(); });
-
 // زر التشغيل
 playPauseBtn.addEventListener('click', e=>{
   e.stopPropagation();
   if(videoPlayer.paused){
     videoPlayer.play();
-    playPauseBtn.textContent = '⏸️';
+    playPauseBtn.textContent='⏸️';
   } else {
     videoPlayer.pause();
-    playPauseBtn.textContent = '▶️';
+    playPauseBtn.textContent='▶️';
   }
 });
 
-// Fullscreen باستخدام Telegram MiniApp API
-function requestTelegramFullscreen(){
+// زر Fullscreen
+function requestFullscreen() {
   if(window.Telegram && Telegram.WebApp){
-    Telegram.WebApp.expand(); // يملأ الشاشة كاملًا
-  } else {
-    if(videoContainer.requestFullscreen){
-      videoContainer.requestFullscreen();
-    } else if(videoContainer.webkitRequestFullscreen){
-      videoContainer.webkitRequestFullscreen();
-    } else if(videoContainer.msRequestFullscreen){
-      videoContainer.msRequestFullscreen();
-    }
+    Telegram.WebApp.expand(); // ملء كامل داخل تيليجرام
+  }
+  if(videoContainer.requestFullscreen){
+    videoContainer.requestFullscreen();
+  } else if(videoContainer.webkitRequestFullscreen){
+    videoContainer.webkitRequestFullscreen();
+  } else if(videoContainer.msRequestFullscreen){
+    videoContainer.msRequestFullscreen();
   }
 }
 fullscreenBtn.addEventListener('click', e=>{
   e.stopPropagation();
-  requestTelegramFullscreen();
+  requestFullscreen();
 });
 
-// تشغيل Fullscreen تلقائي عند البداية
-videoPlayer.addEventListener('play', ()=>{
+// عند تشغيل الفيديو يحاول الدخول Fullscreen تلقائيًا
+videoPlayer.addEventListener('play', ()=> {
   playPauseBtn.textContent='⏸️';
-  requestTelegramFullscreen();
+  requestFullscreen();
 });
-videoPlayer.addEventListener('pause', ()=>playPauseBtn.textContent='▶️');
-
-// إخفاء عناصر التحكم بعد البداية تلقائيًا
-showControls();
+videoPlayer.addEventListener('pause', ()=> playPauseBtn.textContent='▶️');
 
 // جعل شريط تيليجرام العلوي شفاف
 if(window.Telegram && Telegram.WebApp){
