@@ -5,22 +5,82 @@
   <title>MiniApp TV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#000; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
-    video { width:100%; max-width:720px; height:auto; background:#000; }
-    h2 { text-align:center; margin:10px 0; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      max-width: 720px;
+      height: auto;
+      background: #000;
+      cursor: pointer;
+    }
+    video {
+      width: 100%;
+      height: auto;
+    }
+    h2 {
+      text-align: center;
+      margin: 10px 0;
+      z-index: 10;
+    }
+    .controls {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      transition: opacity 0.3s;
+      opacity: 0;
+      z-index: 20;
+    }
+    .controls.visible {
+      opacity: 1;
+    }
+    .control-btn {
+      background: rgba(0, 0, 0, 0.5);
+      border: none;
+      color: white;
+      font-size: 1.5em;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
   <h2 id="channelName">جاري التحميل...</h2>
-  <video id="videoPlayer" controls autoplay></video>
+  <div id="videoContainer">
+    <video id="videoPlayer"></video>
+    <div id="videoControls" class="controls">
+      <button id="playPauseBtn" class="control-btn">▶️</button>
+      <button id="fullscreenBtn" class="control-btn">🖥️</button>
+    </div>
+  </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const name = params.get("name"); // استقبال الاسم
-    const url = params.get("url");   // استقبال الرابط
+    const name = params.get("name");
+    const url = params.get("url");
 
     const channelNameDisplay = document.getElementById("channelName");
     const videoPlayer = document.getElementById("videoPlayer");
+    const videoContainer = document.getElementById("videoContainer");
+    const videoControls = document.getElementById("videoControls");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
 
     if (name && url) {
       channelNameDisplay.textContent = name;
@@ -29,6 +89,35 @@
     } else {
       channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
     }
+
+    // إظهار/إخفاء عناصر التحكم عند النقر على الفيديو
+    videoContainer.addEventListener('click', () => {
+      videoControls.classList.toggle('visible');
+    });
+
+    // التحكم في زر التشغيل/الإيقاف المؤقت
+    playPauseBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // منع النقر من الوصول إلى videoContainer
+      if (videoPlayer.paused) {
+        videoPlayer.play();
+        playPauseBtn.textContent = '⏸️';
+      } else {
+        videoPlayer.pause();
+        playPauseBtn.textContent = '▶️';
+      }
+    });
+
+    // التحكم في زر الشاشة الكاملة
+    fullscreenBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // منع النقر من الوصول إلى videoContainer
+      if (videoContainer.requestFullscreen) {
+        videoContainer.requestFullscreen();
+      } else if (videoContainer.webkitRequestFullscreen) { // Safari
+        videoContainer.webkitRequestFullscreen();
+      } else if (videoContainer.msRequestFullscreen) { // IE11
+        videoContainer.msRequestFullscreen();
+      }
+    });
   </script>
 </body>
 </html>
