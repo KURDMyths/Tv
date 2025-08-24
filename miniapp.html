@@ -12,7 +12,7 @@
     height: 100vh;
     overflow: hidden;
     background: black;
-    /* تعويض مناطق الأزرار العلوية والسفلية (safe area) */
+    /* محاولة إخفاء مناطق الأزرار العلوية والسفلية (safe area) */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -48,8 +48,8 @@
   video {
     width: 100%;
     height: 100%;
-    /* تأكد من ظهور الفيديو بالكامل دون اقتصاص */
-    object-fit: contain;
+    /* لجعل الفيديو يملأ الشاشة بالكامل مع اقتصاص محتمل */
+    object-fit: cover;
   }
   .controls {
     position: absolute;
@@ -133,7 +133,6 @@ playPauseBtn.addEventListener('click', e => {
 
 // تشغيل وضع ملء الشاشة عند تشغيل الفيديو في الوضع الأفقي فقط
 function enterFullscreenOnLandscape() {
-  // التحقق من أن الجهاز في الوضع الأفقي
   if (screen.orientation.type.startsWith('landscape')) {
     const docElm = document.documentElement;
     if (docElm.requestFullscreen) {
@@ -156,6 +155,13 @@ videoPlayer.addEventListener('pause', () => playPauseBtn.textContent = '▶️')
 
 // إخفاء عناصر التحكم بعد البداية تلقائياً
 showControls();
+
+// إضافة استماع لتغير اتجاه الشاشة لإعادة تطبيق ملء الشاشة
+screen.orientation.addEventListener('change', () => {
+  if (screen.orientation.type.startsWith('landscape') && !document.fullscreenElement) {
+    enterFullscreenOnLandscape();
+  }
+});
 </script>
 
 </body>
