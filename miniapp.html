@@ -12,9 +12,6 @@
     height: 100vh;
     overflow: hidden;
     background: black;
-    /* تعويض مناطق الأزرار العلوية والسفلية (safe area) */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
   }
   body {
     display: flex;
@@ -23,44 +20,49 @@
     font-family: Arial, sans-serif;
     color: white;
   }
-  #channelName {
-    position: absolute;
-    top: env(safe-area-inset-top);
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.5);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 1.2em;
-    z-index: 10;
-    transition: opacity 0.3s;
-    opacity: 1;
-  }
-  #videoContainer {
-    position: relative;
+  #videoWrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background: black;
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 100;
   }
   video {
     width: 100%;
     height: 100%;
-    /* تأكد من ظهور الفيديو بالكامل دون اقتصاص */
+    /* لجعل الفيديو بالكامل مرئيا داخل الشاشة */
     object-fit: contain;
   }
-  .controls {
-    position: absolute;
-    bottom: env(safe-area-inset-bottom);
-    left: 50%;
-    transform: translateX(-50%);
+  #channelName {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0));
+    transition: opacity 0.3s;
+    opacity: 1;
+    z-index: 200;
+  }
+  #videoControls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
+    justify-content: center;
+    padding: 10px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
     gap: 10px;
     transition: opacity 0.3s;
     opacity: 0;
-    z-index: 20;
+    z-index: 200;
   }
   .controls.visible { opacity: 1; }
   .control-btn {
@@ -76,13 +78,16 @@
 </head>
 <body>
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<div id="videoWrapper">
+  <video id="videoPlayer" playsinline webkit-playsinline></video>
+</div>
+
 <div id="channelName">جاري التحميل...</div>
 
-<div id="videoContainer">
-  <video id="videoPlayer" playsinline webkit-playsinline></video>
-  <div id="videoControls" class="controls">
-    <button id="playPauseBtn" class="control-btn">▶️</button>
-  </div>
+<div id="videoControls" class="controls">
+  <button id="playPauseBtn" class="control-btn">▶️</button>
 </div>
 
 <script>
@@ -92,7 +97,6 @@ const url = params.get("url");
 
 const channelNameDisplay = document.getElementById("channelName");
 const videoPlayer = document.getElementById("videoPlayer");
-const videoContainer = document.getElementById("videoContainer");
 const videoControls = document.getElementById("videoControls");
 const playPauseBtn = document.getElementById("playPauseBtn");
 
@@ -116,8 +120,10 @@ function showControls(){
   }, 4000);
 }
 
-// عند الضغط على الفيديو
-videoContainer.addEventListener('click', ()=>{ showControls(); });
+// عند الضغط على أي مكان في الشاشة
+document.addEventListener('click', ()=>{
+  showControls();
+});
 
 // زر التشغيل
 playPauseBtn.addEventListener('click', e => {
@@ -131,31 +137,35 @@ playPauseBtn.addEventListener('click', e => {
   }
 });
 
-// تشغيل وضع ملء الشاشة عند تشغيل الفيديو في الوضع الأفقي فقط
-function enterFullscreenOnLandscape() {
-  // التحقق من أن الجهاز في الوضع الأفقي
-  if (screen.orientation.type.startsWith('landscape')) {
-    const docElm = document.documentElement;
-    if (docElm.requestFullscreen) {
-      docElm.requestFullscreen();
-    } else if (docElm.mozRequestFullScreen) { /* Firefox */
-      docElm.mozRequestFullScreen();
-    } else if (docElm.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-      docElm.webkitRequestFullscreen();
-    } else if (docElm.msRequestFullscreen) { /* IE/Edge */
-      docElm.msRequestFullscreen();
-    }
+// استخدام دالة Telegram Web App لملء الشاشة
+function expandMiniApp() {
+  // التحقق من أن الواجهة متوفرة
+  if (window.Telegram && window.Telegram.WebApp) {
+    // إخفاء الأزرار تلقائيا وتكبير التطبيق ليملأ الشاشة
+    Telegram.WebApp.expand();
   }
 }
 
+// تشغيل وضع ملء الشاشة عند تشغيل الفيديو في الوضع الأفقي فقط
 videoPlayer.addEventListener('play', () => {
   playPauseBtn.textContent = '⏸️';
-  enterFullscreenOnLandscape();
+  // التحقق من أن الجهاز في الوضع الأفقي قبل توسيع التطبيق
+  if (window.screen.orientation.type.startsWith('landscape')) {
+    expandMiniApp();
+  }
 });
+
 videoPlayer.addEventListener('pause', () => playPauseBtn.textContent = '▶️');
 
 // إخفاء عناصر التحكم بعد البداية تلقائياً
 showControls();
+
+// إضافة استماع لتغير اتجاه الشاشة
+window.screen.orientation.addEventListener('change', () => {
+  if (window.screen.orientation.type.startsWith('landscape')) {
+    expandMiniApp();
+  }
+});
 </script>
 
 </body>
