@@ -1,27 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MiniApp TV</title>
+  <title>Mini TV</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
-    body { margin: 0; background: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    video { width: 100%; height: auto; max-height: 100vh; }
+    body { background:#111; color:white; font-family:sans-serif; text-align:center; }
+    video { width:100%; max-height:70vh; margin:10px 0; border:2px solid #444; border-radius:10px; }
+    select { padding:10px; margin:10px; font-size:16px; }
   </style>
 </head>
 <body>
+  <h2>📺 قنوات البث المباشر</h2>
+
+  <label>اختر التصنيف:</label>
+  <select id="categoryList"></select>
+
+  <label>اختر القناة:</label>
+  <select id="channelList"></select>
+
   <video id="video" controls autoplay></video>
+
   <script>
-    var video = document.getElementById('video');
-    var videoSrc = "https://live-hls-abr-cdn.livepush.io/live/bigbuckbunnyclip/index.m3u8"; // رابط البث
-    if (Hls.isSupported()) {
-      var hls = new Hls();
-      hls.loadSource(videoSrc);
-      hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = videoSrc;
+    let channelsData = {};
+
+    async function loadChannels() {
+      let res = await fetch("channels.json");
+      channelsData = await res.json();
+
+      let catSelect = document.getElementById("categoryList");
+      catSelect.innerHTML = "";
+
+      Object.keys(channelsData).forEach((cat, i) => {
+        let opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        if(i===0) opt.selected = true;
+        catSelect.appendChild(opt);
+      });
+
+      loadChannelsByCategory(catSelect.value);
+      catSelect.onchange = () => loadChannelsByCategory(catSelect.value);
     }
+
+    function loadChannelsByCategory(cat) {
+      let chanSelect = document.getElementById("channelList");
+      chanSelect.innerHTML = "";
+
+      channelsData[cat].forEach((ch, i) => {
+        let opt = document.createElement("option");
+        opt.value = ch.url;
+        opt.textContent = ch.name;
+        if(i===0) opt.selected = true;
+        chanSelect.appendChild(opt);
+      });
+
+      play(chanSelect.value);
+      chanSelect.onchange = () => play(chanSelect.value);
+    }
+
+    function play(url) {
+      let video = document.getElementById("video");
+      if(Hls.isSupported()) {
+        let hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else if(video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = url;
+      }
+    }
+
+    loadChannels();
   </script>
 </body>
 </html>
