@@ -12,6 +12,9 @@
     height: 100vh;
     overflow: hidden;
     background: black;
+    /* تعويض مناطق الأزرار العلوية والسفلية (safe area) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
   body {
     display: flex;
@@ -20,9 +23,9 @@
     font-family: Arial, sans-serif;
     color: white;
   }
-  h2 {
+  #channelName {
     position: absolute;
-    top: env(safe-area-inset-top, 10px);
+    top: env(safe-area-inset-top);
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0,0,0,0.5);
@@ -31,22 +34,26 @@
     font-size: 1.2em;
     z-index: 10;
     transition: opacity 0.3s;
+    opacity: 1;
   }
-  h2.hidden { opacity: 0; }
   #videoContainer {
     position: relative;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    /* تأكد من ظهور الفيديو بالكامل دون اقتصاص */
+    object-fit: contain;
   }
   .controls {
     position: absolute;
-    bottom: 10px;
+    bottom: env(safe-area-inset-bottom);
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -69,13 +76,12 @@
 </head>
 <body>
 
-<h2 id="channelName">جاري التحميل...</h2>
+<div id="channelName">جاري التحميل...</div>
 
 <div id="videoContainer">
   <video id="videoPlayer" playsinline webkit-playsinline></video>
   <div id="videoControls" class="controls">
     <button id="playPauseBtn" class="control-btn">▶️</button>
-    <button id="fullscreenBtn" class="control-btn">🖥️</button>
   </div>
 </div>
 
@@ -89,12 +95,11 @@ const videoPlayer = document.getElementById("videoPlayer");
 const videoContainer = document.getElementById("videoContainer");
 const videoControls = document.getElementById("videoControls");
 const playPauseBtn = document.getElementById("playPauseBtn");
-const fullscreenBtn = document.getElementById("fullscreenBtn");
 
 if(name && url){
   channelNameDisplay.textContent = name;
   videoPlayer.src = url;
-  videoPlayer.play().catch(e=>console.log("خطأ في التشغيل:", e));
+  videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
 } else {
   channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
 }
@@ -103,11 +108,11 @@ if(name && url){
 let hideTimeout;
 function showControls(){
   videoControls.classList.add('visible');
-  channelNameDisplay.classList.remove('hidden');
+  channelNameDisplay.style.opacity = '1';
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{
     videoControls.classList.remove('visible');
-    channelNameDisplay.classList.add('hidden');
+    channelNameDisplay.style.opacity = '0';
   }, 4000);
 }
 
@@ -115,7 +120,7 @@ function showControls(){
 videoContainer.addEventListener('click', ()=>{ showControls(); });
 
 // زر التشغيل
-playPauseBtn.addEventListener('click', e=>{
+playPauseBtn.addEventListener('click', e => {
   e.stopPropagation();
   if(videoPlayer.paused){
     videoPlayer.play();
@@ -126,27 +131,28 @@ playPauseBtn.addEventListener('click', e=>{
   }
 });
 
-// Fullscreen حقيقي
-function requestFullScreen(){
-  if(videoContainer.requestFullscreen){
-    videoContainer.requestFullscreen();
-  } else if(videoContainer.webkitRequestFullscreen){
-    videoContainer.webkitRequestFullscreen();
-  } else if(videoContainer.msRequestFullscreen){
-    videoContainer.msRequestFullscreen();
+// تشغيل وضع ملء الشاشة عند تشغيل الفيديو في الوضع الأفقي فقط
+function enterFullscreenOnLandscape() {
+  // التحقق من أن الجهاز في الوضع الأفقي
+  if (screen.orientation.type.startsWith('landscape')) {
+    const docElm = document.documentElement;
+    if (docElm.requestFullscreen) {
+      docElm.requestFullscreen();
+    } else if (docElm.mozRequestFullScreen) { /* Firefox */
+      docElm.mozRequestFullScreen();
+    } else if (docElm.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+      docElm.webkitRequestFullscreen();
+    } else if (docElm.msRequestFullscreen) { /* IE/Edge */
+      docElm.msRequestFullscreen();
+    }
   }
 }
-fullscreenBtn.addEventListener('click', e=>{
-  e.stopPropagation();
-  requestFullScreen();
-});
 
-// تشغيل Fullscreen تلقائي عند البداية (يحاول إخفاء أزرار الهاتف)
-videoPlayer.addEventListener('play', ()=>{
-  playPauseBtn.textContent='⏸️';
-  requestFullScreen();
+videoPlayer.addEventListener('play', () => {
+  playPauseBtn.textContent = '⏸️';
+  enterFullscreenOnLandscape();
 });
-videoPlayer.addEventListener('pause', ()=>playPauseBtn.textContent='▶️');
+videoPlayer.addEventListener('pause', () => playPauseBtn.textContent = '▶️');
 
 // إخفاء عناصر التحكم بعد البداية تلقائياً
 showControls();
