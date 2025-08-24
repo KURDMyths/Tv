@@ -8,21 +8,18 @@
   html, body {
     margin: 0;
     padding: 0;
-    height: 100%;
-    width: 100%;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    background: #000;
+    background: black;
   }
-
   body {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     font-family: Arial, sans-serif;
-    color: #fff;
+    color: white;
   }
-
   h2 {
     position: absolute;
     top: env(safe-area-inset-top, 10px);
@@ -35,25 +32,18 @@
     z-index: 10;
     transition: opacity 0.3s;
   }
-
-  h2.hidden {
-    opacity: 0;
-  }
-
+  h2.hidden { opacity: 0; }
   #videoContainer {
     position: relative;
     width: 100vw;
-    height: 56.25vw; /* 16:9 افقي */
-    max-height: 100vh;
-    background: #000;
+    height: 100vh;
+    background: black;
   }
-
   video {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
   .controls {
     position: absolute;
     bottom: 10px;
@@ -65,34 +55,15 @@
     opacity: 0;
     z-index: 20;
   }
-
-  .controls.visible {
-    opacity: 1;
-  }
-
+  .controls.visible { opacity: 1; }
   .control-btn {
     background: rgba(0,0,0,0.6);
     border: none;
-    color: #fff;
+    color: white;
     font-size: 1.5em;
     padding: 8px 14px;
     border-radius: 8px;
     cursor: pointer;
-  }
-
-  /* Landscape full-screen for mobile */
-  @media (orientation: landscape) {
-    html, body {
-      width: 100vw;
-      height: 100vh;
-    }
-    #videoContainer {
-      width: 100vw;
-      height: 100vh;
-    }
-    h2 {
-      top: env(safe-area-inset-top, 5px);
-    }
   }
 </style>
 </head>
@@ -120,7 +91,6 @@ const videoControls = document.getElementById("videoControls");
 const playPauseBtn = document.getElementById("playPauseBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 
-// ضبط القناة والفيديو
 if(name && url){
   channelNameDisplay.textContent = name;
   videoPlayer.src = url;
@@ -138,13 +108,11 @@ function showControls(){
   hideTimeout = setTimeout(()=>{
     videoControls.classList.remove('visible');
     channelNameDisplay.classList.add('hidden');
-  }, 4000); // يخفي بعد 4 ثواني
+  }, 4000);
 }
 
 // عند الضغط على الفيديو
-videoContainer.addEventListener('click', ()=>{
-  showControls();
-});
+videoContainer.addEventListener('click', ()=>{ showControls(); });
 
 // زر التشغيل
 playPauseBtn.addEventListener('click', e=>{
@@ -158,9 +126,8 @@ playPauseBtn.addEventListener('click', e=>{
   }
 });
 
-// Fullscreen حقيقي (يحاول ملء الشاشة)
-fullscreenBtn.addEventListener('click', e=>{
-  e.stopPropagation();
+// Fullscreen حقيقي
+function requestFullScreen(){
   if(videoContainer.requestFullscreen){
     videoContainer.requestFullscreen();
   } else if(videoContainer.webkitRequestFullscreen){
@@ -168,13 +135,20 @@ fullscreenBtn.addEventListener('click', e=>{
   } else if(videoContainer.msRequestFullscreen){
     videoContainer.msRequestFullscreen();
   }
+}
+fullscreenBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  requestFullScreen();
 });
 
-// عند تشغيل الفيديو يتم تحديث زر التشغيل
-videoPlayer.addEventListener('play', ()=>playPauseBtn.textContent='⏸️');
+// تشغيل Fullscreen تلقائي عند البداية (يحاول إخفاء أزرار الهاتف)
+videoPlayer.addEventListener('play', ()=>{
+  playPauseBtn.textContent='⏸️';
+  requestFullScreen();
+});
 videoPlayer.addEventListener('pause', ()=>playPauseBtn.textContent='▶️');
 
-// إخفاء عناصر التحكم بعد 4 ثواني تلقائياً عند البداية
+// إخفاء عناصر التحكم بعد البداية تلقائياً
 showControls();
 </script>
 
