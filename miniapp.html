@@ -27,7 +27,7 @@
     top: env(safe-area-inset-top);
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.3); /* شفاف جزئي */
     padding: calc(4px + 0.5vw) calc(8px + 1vw);
     border-radius: 8px;
     font-size: calc(12px + 1vw);
@@ -105,6 +105,15 @@
 </div>
 
 <script>
+// إذا تم التشغيل داخل Telegram WebApp
+if (window.Telegram && window.Telegram.WebApp) {
+    const WebApp = window.Telegram.WebApp;
+    WebApp.expand(); // تكبير WebApp ليملأ الشاشة
+    WebApp.MainButton.hide(); // إخفاء زر MainButton إذا موجود
+    WebApp.BackButton.hide(); // إخفاء زر العودة
+    WebApp.setHeaderColor("#00000000"); // شفاف (إن دعم)
+}
+
 const params = new URLSearchParams(window.location.search);
 const name = params.get("name");
 const url = params.get("url");
