@@ -1,165 +1,182 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>MiniApp TV</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+<meta charset="UTF-8">
+<title>MiniApp TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #000;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    color: #fff;
+  }
+
+  h2 {
+    position: absolute;
+    top: env(safe-area-inset-top, 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.5);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1.2em;
+    z-index: 10;
+    transition: opacity 0.3s;
+  }
+
+  h2.hidden {
+    opacity: 0;
+  }
+
+  #videoContainer {
+    position: relative;
+    width: 100vw;
+    height: 56.25vw; /* 16:9 افقي */
+    max-height: 100vh;
+    background: #000;
+  }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    transition: opacity 0.3s;
+    opacity: 0;
+    z-index: 20;
+  }
+
+  .controls.visible {
+    opacity: 1;
+  }
+
+  .control-btn {
+    background: rgba(0,0,0,0.6);
+    border: none;
+    color: #fff;
+    font-size: 1.5em;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* Landscape full-screen for mobile */
+  @media (orientation: landscape) {
+    html, body {
+      width: 100vw;
       height: 100vh;
-      overflow: hidden;
-      position: relative;
     }
-
-    h2 {
-      text-align: center;
-      margin: 8px 0;
-      font-size: 1.2em;
-      padding: 5px 10px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 8px;
-      z-index: 10;
-      transition: opacity 0.3s;
-    }
-
-    h2.hidden {
-      opacity: 0;
-    }
-
     #videoContainer {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: #000;
+      width: 100vw;
+      height: 100vh;
     }
-
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: black;
+    h2 {
+      top: env(safe-area-inset-top, 5px);
     }
-
-    .controls {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      transition: opacity 0.3s;
-      opacity: 0;
-      z-index: 20;
-    }
-
-    .controls.visible {
-      opacity: 1;
-    }
-
-    .control-btn {
-      background: rgba(0, 0, 0, 0.6);
-      border: none;
-      color: white;
-      font-size: 1.4em;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: 8px;
-    }
-
-    @media (orientation: landscape) {
-      body {
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-      }
-      h2 {
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 1.1em;
-        background: rgba(0,0,0,0.7);
-      }
-      #videoContainer {
-        flex: 1;
-        height: 100vh;
-        width: auto;
-      }
-      video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <h2 id="channelName">جاري التحميل...</h2>
-  <div id="videoContainer">
-    <video id="videoPlayer" controls></video>
-    <div id="videoControls" class="controls">
-      <button id="playPauseBtn" class="control-btn">▶️</button>
-      <button id="fullscreenBtn" class="control-btn">🖥️</button>
-    </div>
+
+<h2 id="channelName">جاري التحميل...</h2>
+
+<div id="videoContainer">
+  <video id="videoPlayer" playsinline webkit-playsinline></video>
+  <div id="videoControls" class="controls">
+    <button id="playPauseBtn" class="control-btn">▶️</button>
+    <button id="fullscreenBtn" class="control-btn">🖥️</button>
   </div>
+</div>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const name = params.get("name");
-    const url = params.get("url");
+<script>
+const params = new URLSearchParams(window.location.search);
+const name = params.get("name");
+const url = params.get("url");
 
-    const channelNameDisplay = document.getElementById("channelName");
-    const videoPlayer = document.getElementById("videoPlayer");
-    const videoContainer = document.getElementById("videoContainer");
-    const videoControls = document.getElementById("videoControls");
-    const playPauseBtn = document.getElementById("playPauseBtn");
-    const fullscreenBtn = document.getElementById("fullscreenBtn");
+const channelNameDisplay = document.getElementById("channelName");
+const videoPlayer = document.getElementById("videoPlayer");
+const videoContainer = document.getElementById("videoContainer");
+const videoControls = document.getElementById("videoControls");
+const playPauseBtn = document.getElementById("playPauseBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
 
-    if (name && url) {
-      channelNameDisplay.textContent = name;
-      videoPlayer.src = url;
-      videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
-    } else {
-      channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
-    }
+// ضبط القناة والفيديو
+if(name && url){
+  channelNameDisplay.textContent = name;
+  videoPlayer.src = url;
+  videoPlayer.play().catch(e=>console.log("خطأ في التشغيل:", e));
+} else {
+  channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
+}
 
-    // إظهار/إخفاء عناصر التحكم + اسم القناة
-    videoContainer.addEventListener('click', () => {
-      videoControls.classList.toggle('visible');
-      channelNameDisplay.classList.toggle('hidden');
-    });
+// إظهار/إخفاء عناصر التحكم + الاسم تلقائياً
+let hideTimeout;
+function showControls(){
+  videoControls.classList.add('visible');
+  channelNameDisplay.classList.remove('hidden');
+  clearTimeout(hideTimeout);
+  hideTimeout = setTimeout(()=>{
+    videoControls.classList.remove('visible');
+    channelNameDisplay.classList.add('hidden');
+  }, 4000); // يخفي بعد 4 ثواني
+}
 
-    // زر تشغيل/إيقاف
-    playPauseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (videoPlayer.paused) {
-        videoPlayer.play();
-        playPauseBtn.textContent = '⏸️';
-      } else {
-        videoPlayer.pause();
-        playPauseBtn.textContent = '▶️';
-      }
-    });
+// عند الضغط على الفيديو
+videoContainer.addEventListener('click', ()=>{
+  showControls();
+});
 
-    // زر ملء الشاشة
-    fullscreenBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (videoContainer.requestFullscreen) {
-        videoContainer.requestFullscreen();
-      } else if (videoContainer.webkitRequestFullscreen) {
-        videoContainer.webkitRequestFullscreen();
-      } else if (videoContainer.msRequestFullscreen) {
-        videoContainer.msRequestFullscreen();
-      }
-    });
-  </script>
+// زر التشغيل
+playPauseBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  if(videoPlayer.paused){
+    videoPlayer.play();
+    playPauseBtn.textContent = '⏸️';
+  } else {
+    videoPlayer.pause();
+    playPauseBtn.textContent = '▶️';
+  }
+});
+
+// Fullscreen حقيقي (يحاول ملء الشاشة)
+fullscreenBtn.addEventListener('click', e=>{
+  e.stopPropagation();
+  if(videoContainer.requestFullscreen){
+    videoContainer.requestFullscreen();
+  } else if(videoContainer.webkitRequestFullscreen){
+    videoContainer.webkitRequestFullscreen();
+  } else if(videoContainer.msRequestFullscreen){
+    videoContainer.msRequestFullscreen();
+  }
+});
+
+// عند تشغيل الفيديو يتم تحديث زر التشغيل
+videoPlayer.addEventListener('play', ()=>playPauseBtn.textContent='⏸️');
+videoPlayer.addEventListener('pause', ()=>playPauseBtn.textContent='▶️');
+
+// إخفاء عناصر التحكم بعد 4 ثواني تلقائياً عند البداية
+showControls();
+</script>
+
 </body>
 </html>
