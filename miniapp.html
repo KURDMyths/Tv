@@ -1,76 +1,70 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>Mini TV</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <style>
-    body { background:#111; color:white; font-family:sans-serif; text-align:center; }
-    video { width:100%; max-height:70vh; margin:10px 0; border:2px solid #444; border-radius:10px; }
-    select { padding:10px; margin:10px; font-size:16px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini TV</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #111;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+h1 {
+    margin-bottom: 20px;
+}
+#player {
+    margin-top: 20px;
+}
+video {
+    width: 100%;
+    max-width: 800px;
+    border-radius: 10px;
+}
+</style>
 </head>
 <body>
-  <h2>📺 قنوات البث المباشر</h2>
+<h1>مشاهدة القناة</h1>
+<div id="player"></div>
 
-  <label>اختر التصنيف:</label>
-  <select id="categoryList"></select>
+<script>
+// قراءة اسم القناة من رابط WebApp
+const urlParams = new URLSearchParams(window.location.search);
+const channelName = urlParams.get('channel');
 
-  <label>اختر القناة:</label>
-  <select id="channelList"></select>
+// رابط JSON من GitHub Pages
+const jsonURL = "https://KURDMyths.github.io/Tv/channels.json";
 
-  <video id="video" controls autoplay></video>
+async function loadChannel() {
+    const res = await fetch(jsonURL);
+    const data = await res.json();
 
-  <script>
-    let channelsData = {};
+    let found = false;
+    for (let category in data) {
+        if (data[category][channelName]) {
+            found = true;
+            const videoUrl = data[category][channelName];
 
-    async function loadChannels() {
-      let res = await fetch("channels.json");
-      channelsData = await res.json();
-
-      let catSelect = document.getElementById("categoryList");
-      catSelect.innerHTML = "";
-
-      Object.keys(channelsData).forEach((cat, i) => {
-        let opt = document.createElement("option");
-        opt.value = cat;
-        opt.textContent = cat;
-        if(i===0) opt.selected = true;
-        catSelect.appendChild(opt);
-      });
-
-      loadChannelsByCategory(catSelect.value);
-      catSelect.onchange = () => loadChannelsByCategory(catSelect.value);
+            const container = document.getElementById("player");
+            const video = document.createElement("video");
+            video.src = videoUrl;
+            video.controls = true;
+            video.autoplay = true;
+            video.style.width = "100%";
+            video.style.borderRadius = "10px";
+            container.appendChild(video);
+            break;
+        }
     }
 
-    function loadChannelsByCategory(cat) {
-      let chanSelect = document.getElementById("channelList");
-      chanSelect.innerHTML = "";
-
-      channelsData[cat].forEach((ch, i) => {
-        let opt = document.createElement("option");
-        opt.value = ch.url;
-        opt.textContent = ch.name;
-        if(i===0) opt.selected = true;
-        chanSelect.appendChild(opt);
-      });
-
-      play(chanSelect.value);
-      chanSelect.onchange = () => play(chanSelect.value);
+    if (!found) {
+        document.getElementById("player").innerHTML = "🚫 القناة غير موجودة.";
     }
+}
 
-    function play(url) {
-      let video = document.getElementById("video");
-      if(Hls.isSupported()) {
-        let hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if(video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = url;
-      }
-    }
-
-    loadChannels();
-  </script>
+loadChannel();
+</script>
 </body>
 </html>
