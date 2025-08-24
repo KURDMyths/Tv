@@ -5,7 +5,6 @@
 <title>MiniApp TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  /* إعدادات أساسية */
   body {
     margin: 0;
     font-family: 'Arial', sans-serif;
@@ -19,14 +18,12 @@
     overflow: hidden;
   }
 
-  /* عنوان القناة */
   h2 {
     text-align: center;
     margin: 15px 0;
     font-size: 1.5em;
   }
 
-  /* حاوية الفيديو */
   #videoContainer {
     position: relative;
     width: 90%;
@@ -38,7 +35,6 @@
     box-shadow: 0 0 20px rgba(255,255,255,0.2);
   }
 
-  /* الفيديو */
   video {
     width: 100%;
     height: auto;
@@ -46,7 +42,6 @@
     background: #000;
   }
 
-  /* عناصر التحكم */
   .controls {
     position: absolute;
     bottom: 0;
@@ -86,7 +81,6 @@
     background: rgba(255, 255, 255, 0.3);
   }
 
-  /* شريط التقدم */
   .progress-container {
     width: 100%;
     height: 5px;
@@ -103,7 +97,6 @@
     transition: width 0.1s linear;
   }
 
-  /* شريط الصوت */
   .volume-container {
     display: flex;
     align-items: center;
@@ -112,6 +105,24 @@
 
   input[type="range"] {
     width: 100px;
+  }
+
+  /* Fullscreen CSS قابل للسحب */
+  #videoContainer.fullscreen-mode {
+    position: fixed;
+    top: 50px;
+    left: 50px;
+    width: 90vw;
+    height: 50vh;
+    z-index: 9999;
+    border-radius: 10px;
+    cursor: grab;
+  }
+
+  #videoContainer.fullscreen-mode video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   @media (max-width: 480px) {
@@ -187,18 +198,6 @@ playPauseBtn.addEventListener('click', e => {
   }
 });
 
-// زر الشاشة الكاملة
-fullscreenBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  if(videoContainer.requestFullscreen){
-    videoContainer.requestFullscreen();
-  } else if(videoContainer.webkitRequestFullscreen){
-    videoContainer.webkitRequestFullscreen();
-  } else if(videoContainer.msRequestFullscreen){
-    videoContainer.msRequestFullscreen();
-  }
-});
-
 // شريط التقدم
 videoPlayer.addEventListener('timeupdate', () => {
   const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
@@ -223,6 +222,70 @@ volumeSlider.addEventListener('input', () => {
 videoPlayer.addEventListener('play', ()=> playPauseBtn.textContent = '⏸️');
 videoPlayer.addEventListener('pause', ()=> playPauseBtn.textContent = '▶️');
 
+// Fullscreen CSS
+fullscreenBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  videoContainer.classList.toggle('fullscreen-mode');
+});
+
+// السحب للتحريك داخل Fullscreen CSS
+let isDragging = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+videoContainer.addEventListener('mousedown', e => {
+  if (!videoContainer.classList.contains('fullscreen-mode')) return;
+  isDragging = true;
+  dragOffsetX = e.clientX - videoContainer.offsetLeft;
+  dragOffsetY = e.clientY - videoContainer.offsetTop;
+  videoContainer.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  let x = e.clientX - dragOffsetX;
+  let y = e.clientY - dragOffsetY;
+
+  // منع خروج الفيديو عن الشاشة
+  x = Math.max(0, Math.min(window.innerWidth - videoContainer.offsetWidth, x));
+  y = Math.max(0, Math.min(window.innerHeight - videoContainer.offsetHeight, y));
+
+  videoContainer.style.left = x + 'px';
+  videoContainer.style.top = y + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  if (isDragging) {
+    isDragging = false;
+    videoContainer.style.cursor = 'grab';
+  }
+});
+
+// دعم السحب باللمس للجوال
+videoContainer.addEventListener('touchstart', e => {
+  if (!videoContainer.classList.contains('fullscreen-mode')) return;
+  isDragging = true;
+  const touch = e.touches[0];
+  dragOffsetX = touch.clientX - videoContainer.offsetLeft;
+  dragOffsetY = touch.clientY - videoContainer.offsetTop;
+});
+
+videoContainer.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  const touch = e.touches[0];
+  let x = touch.clientX - dragOffsetX;
+  let y = touch.clientY - dragOffsetY;
+
+  x = Math.max(0, Math.min(window.innerWidth - videoContainer.offsetWidth, x));
+  y = Math.max(0, Math.min(window.innerHeight - videoContainer.offsetHeight, y));
+
+  videoContainer.style.left = x + 'px';
+  videoContainer.style.top = y + 'px';
+});
+
+videoContainer.addEventListener('touchend', () => {
+  isDragging = false;
+});
 </script>
 
 </body>
