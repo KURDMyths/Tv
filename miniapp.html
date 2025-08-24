@@ -1,123 +1,229 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>MiniApp TV</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
-    #videoContainer {
-      position: relative;
-      width: 100%;
-      max-width: 720px;
-      height: auto;
-      background: #000;
-      cursor: pointer;
-    }
-    video {
-      width: 100%;
-      height: auto;
-    }
-    h2 {
-      text-align: center;
-      margin: 10px 0;
-      z-index: 10;
-    }
-    .controls {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      transition: opacity 0.3s;
-      opacity: 0;
-      z-index: 20;
-    }
-    .controls.visible {
-      opacity: 1;
-    }
-    .control-btn {
-      background: rgba(0, 0, 0, 0.5);
-      border: none;
-      color: white;
-      font-size: 1.5em;
-      padding: 10px 15px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>MiniApp TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  /* إعدادات أساسية */
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* عنوان القناة */
+  h2 {
+    text-align: center;
+    margin: 15px 0;
+    font-size: 1.5em;
+  }
+
+  /* حاوية الفيديو */
+  #videoContainer {
+    position: relative;
+    width: 90%;
+    max-width: 720px;
+    background: #000;
+    cursor: pointer;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  }
+
+  /* الفيديو */
+  video {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #000;
+  }
+
+  /* عناصر التحكم */
+  .controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .controls.visible {
+    opacity: 1;
+  }
+
+  .control-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.2s;
+  }
+
+  .control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* شريط التقدم */
+  .progress-container {
+    width: 100%;
+    height: 5px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #ff0000;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+  }
+
+  /* شريط الصوت */
+  .volume-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  input[type="range"] {
+    width: 100px;
+  }
+
+  @media (max-width: 480px) {
+    h2 { font-size: 1.2em; }
+    .control-btn { font-size: 1.2em; padding: 6px 10px; }
+    input[type="range"] { width: 70px; }
+  }
+</style>
 </head>
 <body>
-  <h2 id="channelName">جاري التحميل...</h2>
-  <div id="videoContainer">
-    <video id="videoPlayer"></video>
-    <div id="videoControls" class="controls">
+
+<h2 id="channelName">جاري التحميل...</h2>
+
+<div id="videoContainer">
+  <video id="videoPlayer"></video>
+  <div id="videoControls" class="controls">
+    <div class="progress-container">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+    <div class="control-buttons">
       <button id="playPauseBtn" class="control-btn">▶️</button>
+      <div class="volume-container">
+        🔊
+        <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="1">
+      </div>
       <button id="fullscreenBtn" class="control-btn">🖥️</button>
     </div>
   </div>
+</div>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const name = params.get("name");
-    const url = params.get("url");
+<script>
+const params = new URLSearchParams(window.location.search);
+const name = params.get("name");
+const url = params.get("url");
 
-    const channelNameDisplay = document.getElementById("channelName");
-    const videoPlayer = document.getElementById("videoPlayer");
-    const videoContainer = document.getElementById("videoContainer");
-    const videoControls = document.getElementById("videoControls");
-    const playPauseBtn = document.getElementById("playPauseBtn");
-    const fullscreenBtn = document.getElementById("fullscreenBtn");
+const channelNameDisplay = document.getElementById("channelName");
+const videoPlayer = document.getElementById("videoPlayer");
+const videoContainer = document.getElementById("videoContainer");
+const videoControls = document.getElementById("videoControls");
+const playPauseBtn = document.getElementById("playPauseBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const progressBar = document.getElementById("progressBar");
+const volumeSlider = document.getElementById("volumeSlider");
 
-    if (name && url) {
-      channelNameDisplay.textContent = name;
-      videoPlayer.src = url;
-      videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
-    } else {
-      channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
-    }
+// ضبط اسم القناة ومصدر الفيديو
+if (name && url) {
+  channelNameDisplay.textContent = name;
+  videoPlayer.src = url;
+  videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
+} else {
+  channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
+}
 
-    // إظهار/إخفاء عناصر التحكم عند النقر على الفيديو
-    videoContainer.addEventListener('click', () => {
-      videoControls.classList.toggle('visible');
-    });
+// إظهار/إخفاء عناصر التحكم عند النقر
+let controlsTimeout;
+videoContainer.addEventListener('click', () => {
+  videoControls.classList.toggle('visible');
+  if(videoControls.classList.contains('visible')){
+    clearTimeout(controlsTimeout);
+    controlsTimeout = setTimeout(()=> videoControls.classList.remove('visible'), 4000);
+  }
+});
 
-    // التحكم في زر التشغيل/الإيقاف المؤقت
-    playPauseBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // منع النقر من الوصول إلى videoContainer
-      if (videoPlayer.paused) {
-        videoPlayer.play();
-        playPauseBtn.textContent = '⏸️';
-      } else {
-        videoPlayer.pause();
-        playPauseBtn.textContent = '▶️';
-      }
-    });
+// زر التشغيل/الإيقاف المؤقت
+playPauseBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if(videoPlayer.paused){
+    videoPlayer.play();
+    playPauseBtn.textContent = '⏸️';
+  } else {
+    videoPlayer.pause();
+    playPauseBtn.textContent = '▶️';
+  }
+});
 
-    // التحكم في زر الشاشة الكاملة
-    fullscreenBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // منع النقر من الوصول إلى videoContainer
-      if (videoContainer.requestFullscreen) {
-        videoContainer.requestFullscreen();
-      } else if (videoContainer.webkitRequestFullscreen) { // Safari
-        videoContainer.webkitRequestFullscreen();
-      } else if (videoContainer.msRequestFullscreen) { // IE11
-        videoContainer.msRequestFullscreen();
-      }
-    });
-  </script>
+// زر الشاشة الكاملة
+fullscreenBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if(videoContainer.requestFullscreen){
+    videoContainer.requestFullscreen();
+  } else if(videoContainer.webkitRequestFullscreen){
+    videoContainer.webkitRequestFullscreen();
+  } else if(videoContainer.msRequestFullscreen){
+    videoContainer.msRequestFullscreen();
+  }
+});
+
+// شريط التقدم
+videoPlayer.addEventListener('timeupdate', () => {
+  const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+  progressBar.style.width = progress + '%';
+});
+
+// التحكم في التقدم عند النقر
+document.querySelector('.progress-container').addEventListener('click', e => {
+  const rect = e.target.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const width = rect.width;
+  const newTime = (clickX / width) * videoPlayer.duration;
+  videoPlayer.currentTime = newTime;
+});
+
+// التحكم في الصوت
+volumeSlider.addEventListener('input', () => {
+  videoPlayer.volume = volumeSlider.value;
+});
+
+// تحديث زر التشغيل حسب حالة الفيديو
+videoPlayer.addEventListener('play', ()=> playPauseBtn.textContent = '⏸️');
+videoPlayer.addEventListener('pause', ()=> playPauseBtn.textContent = '▶️');
+
+</script>
+
 </body>
 </html>
