@@ -16,15 +16,22 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const name = params.get("name");
-    const url = params.get("url");
+    const channelParam = params.get("channel"); // استقبال اسم القناة من الرابط
+
+    // يمكنك إضافة هذه القنوات في كود البوت Python
+    // كمثال للبيانات الثابتة
+    const channels = {
+        "رياضة": "http://example.com/sports.m3u8",
+        "أفلام": "http://example.com/movies.m3u8",
+        "أطفال": "http://example.com/kids.m3u8"
+    };
 
     const channelNameDisplay = document.getElementById("channelName");
     const videoPlayer = document.getElementById("videoPlayer");
 
-    if(name && url){
-      channelNameDisplay.textContent = name;
-      videoPlayer.src = url;
+    if (channelParam && channels[channelParam]) {
+      channelNameDisplay.textContent = channelParam;
+      videoPlayer.src = channels[channelParam];
       videoPlayer.play().catch(e => console.log("خطأ في التشغيل:", e));
     } else {
       channelNameDisplay.textContent = "⚠️ لم يتم تحديد قناة صحيحة";
